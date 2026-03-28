@@ -12,6 +12,11 @@
 		A11111111111111111111103 /* PlatformerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A21111111111111111111103 /* PlatformerView.swift */; };
 		A11111111111111111111104 /* PlatformerScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = A21111111111111111111104 /* PlatformerScene.swift */; };
 		A11111111111111111111105 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A21111111111111111111105 /* Assets.xcassets */; };
+		A11111111111111111111106 /* JigsawPuzzleScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = A21111111111111111111106 /* JigsawPuzzleScene.swift */; };
+		A11111111111111111111107 /* JigsawPuzzleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A21111111111111111111107 /* JigsawPuzzleView.swift */; };
+		A11111111111111111111108 /* RocketScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = A21111111111111111111108 /* RocketScene.swift */; };
+		A11111111111111111111109 /* RocketView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A21111111111111111111109 /* RocketView.swift */; };
+		A1111111111111111111110A /* MarathonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2111111111111111111110A /* MarathonView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -21,6 +26,11 @@
 		A21111111111111111111103 /* PlatformerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlatformerView.swift; sourceTree = "<group>"; };
 		A21111111111111111111104 /* PlatformerScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlatformerScene.swift; sourceTree = "<group>"; };
 		A21111111111111111111105 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		A21111111111111111111106 /* JigsawPuzzleScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JigsawPuzzleScene.swift; sourceTree = "<group>"; };
+		A21111111111111111111107 /* JigsawPuzzleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JigsawPuzzleView.swift; sourceTree = "<group>"; };
+		A21111111111111111111108 /* RocketScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RocketScene.swift; sourceTree = "<group>"; };
+		A21111111111111111111109 /* RocketView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RocketView.swift; sourceTree = "<group>"; };
+		A2111111111111111111110A /* MarathonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarathonView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -48,6 +58,9 @@
 				A21111111111111111111101 /* MinigamesApp.swift */,
 				A21111111111111111111102 /* ContentView.swift */,
 				A41111111111111111111102 /* Platformer */,
+				A41111111111111111111103 /* Puzzle */,
+				A41111111111111111111104 /* Rocket */,
+				A41111111111111111111105 /* Marathon */,
 				A21111111111111111111105 /* Assets.xcassets */,
 			);
 			path = Minigames;
@@ -60,6 +73,32 @@
 				A21111111111111111111104 /* PlatformerScene.swift */,
 			);
 			path = Platformer;
+			sourceTree = "<group>";
+		};
+		A41111111111111111111103 /* Puzzle */ = {
+			isa = PBXGroup;
+			children = (
+				A21111111111111111111106 /* JigsawPuzzleScene.swift */,
+				A21111111111111111111107 /* JigsawPuzzleView.swift */,
+			);
+			path = Puzzle;
+			sourceTree = "<group>";
+		};
+		A41111111111111111111104 /* Rocket */ = {
+			isa = PBXGroup;
+			children = (
+				A21111111111111111111108 /* RocketScene.swift */,
+				A21111111111111111111109 /* RocketView.swift */,
+			);
+			path = Rocket;
+			sourceTree = "<group>";
+		};
+		A41111111111111111111105 /* Marathon */ = {
+			isa = PBXGroup;
+			children = (
+				A2111111111111111111110A /* MarathonView.swift */,
+			);
+			path = Marathon;
 			sourceTree = "<group>";
 		};
 		A41111111111111111111199 /* Products */ = {
@@ -143,6 +182,11 @@
 				A11111111111111111111102 /* ContentView.swift in Sources */,
 				A11111111111111111111103 /* PlatformerView.swift in Sources */,
 				A11111111111111111111104 /* PlatformerScene.swift in Sources */,
+				A11111111111111111111106 /* JigsawPuzzleScene.swift in Sources */,
+				A11111111111111111111107 /* JigsawPuzzleView.swift in Sources */,
+				A11111111111111111111108 /* RocketScene.swift in Sources */,
+				A11111111111111111111109 /* RocketView.swift in Sources */,
+				A1111111111111111111110A /* MarathonView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -8,38 +8,50 @@ struct PlatformerView: View {
         return s
     }()
 
-    @FocusState private var isFocused: Bool
+    @FocusState private var focused: Bool
 
     var body: some View {
-        SpriteView(scene: scene)
-            .ignoresSafeArea()
-            .focusable()
-            .focused($isFocused)
-            .onAppear { isFocused = true }
-            .onTapGesture { isFocused = true }
-            .onKeyPress(keys: [.leftArrow, .rightArrow, .upArrow, .space], phases: .all) { press in
-                switch press.phase {
-                case .down:
-                    switch press.key {
-                    case .leftArrow:  scene.moveLeft()
-                    case .rightArrow: scene.moveRight()
-                    case .upArrow, .space: scene.jump()
+        ZStack {
+            SpriteView(scene: scene)
+                .ignoresSafeArea()
+
+            // Transparent overlay that owns keyboard focus.
+            // Sitting on top of SpriteView ensures it isn't blocked by the
+            // SpriteKit responder chain on Mac Catalyst.
+            Color.clear
+                .contentShape(Rectangle())
+                .focusable()
+                .focused($focused)
+                .onKeyPress(
+                    keys: [.leftArrow, .rightArrow, .upArrow, .downArrow, .space],
+                    phases: .all
+                ) { press in
+                    switch press.phase {
+                    case .down:
+                        switch press.key {
+                        case .leftArrow:              scene.moveLeft()
+                        case .rightArrow:             scene.moveRight()
+                        case .upArrow, .downArrow,
+                             .space:                  scene.jump()
+                        default: break
+                        }
+                    case .up:
+                        switch press.key {
+                        case .leftArrow, .rightArrow: scene.stopHorizontal()
+                        default: break
+                        }
                     default: break
                     }
-                case .up:
-                    switch press.key {
-                    case .leftArrow, .rightArrow: scene.stopHorizontal()
-                    default: break
-                    }
-                default: break
+                    return .handled
                 }
-                return .handled
-            }
-            .overlay(alignment: .bottom) {
-                GameControls(scene: scene)
-                    .padding(.bottom, 28)
-            }
-            .navigationBarTitleDisplayMode(.inline)
+        }
+        .onAppear { focused = true }
+        .onTapGesture  { focused = true }
+        .overlay(alignment: .bottom) {
+            GameControls(scene: scene)
+                .padding(.bottom, 28)
+        }
+        .navigationBarTitleDisplayMode(.inline)
     }
 }
 
