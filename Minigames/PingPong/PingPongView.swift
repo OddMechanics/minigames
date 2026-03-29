@@ -11,19 +11,24 @@ struct PingPongView: View {
     @FocusState private var focused: Bool
 
     var body: some View {
-        ZStack {
-            SpriteView(scene: scene).ignoresSafeArea()
-            Color.clear
-                .contentShape(Rectangle()).focusable().focused($focused)
-                .onKeyPress(keys: [.leftArrow, .rightArrow], phases: .all) { press in
-                    let key = press.key == .leftArrow ? "left" : "right"
-                    if press.phase == .down { scene.keyDown(key: key) }
-                    else if press.phase == .up { scene.keyUp(key: key) }
-                    return .handled
-                }
-        }
-        .onAppear { focused = true }
-        .onTapGesture { focused = true }
-        .toolbar(.hidden, for: .navigationBar)
+        SpriteView(scene: scene)
+            .ignoresSafeArea()
+            // Keyboard overlay sits behind touches (allowsHitTesting false)
+            // so the SpriteView receives all touch input directly.
+            .overlay {
+                Color.clear
+                    .contentShape(Rectangle())
+                    .focusable()
+                    .focused($focused)
+                    .allowsHitTesting(false)   // don't block scene touches
+                    .onKeyPress(keys: [.leftArrow, .rightArrow], phases: .all) { press in
+                        let key = press.key == .leftArrow ? "left" : "right"
+                        if press.phase == .down { scene.keyDown(key: key) }
+                        else if press.phase == .up { scene.keyUp(key: key) }
+                        return .handled
+                    }
+            }
+            .onAppear { focused = true }
+            .toolbar(.hidden, for: .navigationBar)
     }
 }

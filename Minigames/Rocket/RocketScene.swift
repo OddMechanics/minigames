@@ -1,9 +1,9 @@
 import SpriteKit
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Rocket — infinite scrolling space game.
-// Camera auto-scrolls upward; thrust to keep pace, dodge rocks, land on
-// planets for ore. 20 ore → win. Hit rock → instant restart (solo) / lose (infinite mode).
+// Rocket — infinite upward-scrolling space game.
+// No gravity. Camera drifts upward; use thrust to stay ahead and dodge rocks.
+// Land on planets to collect ore. 20 ore → win.
 // ─────────────────────────────────────────────────────────────────────────────
 
 final class RocketScene: SKScene, SKPhysicsContactDelegate {
@@ -14,50 +14,59 @@ final class RocketScene: SKScene, SKPhysicsContactDelegate {
         static let planet: UInt32 = 1 << 2
     }
 
-    // MARK: - Marathon callbacks
+    // MARK: - Callbacks (infinite mode)
     var onWin:  (() -> Void)?
     var onLose: (() -> Void)?
 
     // MARK: - Constants
     private let oreGoal       = 20
-    private let thrustForce: CGFloat = 520
-    private let rotateSpeed: CGFloat = 2.2
+    private let thrustForce:  CGFloat = 460
+    private let rotateSpeed:  CGFloat = 2.2
+    private let baseDrift:    CGFloat = 50    // camera scroll pts/s at start
+    private let maxDrift:     CGFloat = 120   // ramps up over time
 
     // MARK: - State
     private var rocket: SKSpriteNode!
     private var cameraNode: SKCameraNode!
     private var oreLabel: SKLabelNode!
     private var ore = 0
-    private var hasWon = false
-    private var isDead = false
+    private var hasWon      = false
+    private var isDead      = false
     private var needsRespawn = false
-    private var hasBuilt = false
-    private var thrustOn = false
-    private var rotateDir: CGFloat = 0
-    private var scrollSpeed: CGFloat = 75
+    private var hasBuilt    = false
+    private var thrustOn    = false
+    private var rotateDir:  CGFloat = 0
+    private var currentDrift: CGFloat = 0
     private var lastUpdateTime: TimeInterval = 0
-    private var sessionStartTime: TimeInterval = 0   // 0 = not started
-    private var spawnFrontier: CGFloat = 0
+    private var sessionElapsed: TimeInterval = 0  // reset every respawn
+    private var spawnFrontier:  CGFloat = 0
 
     // MARK: - Setup
 
     override func didMove(to view: SKView) {
         isPaused = false
-        guard !hasBuilt else { return }
+        // Reset time tracking every time we enter so drift restarts from base
+        lastUpdateTime = 0
+        sessionElapsed = 0
+        currentDrift   = baseDrift
+        if hasBuilt { return }
         hasBuilt = true
         backgroundColor = SKColor(red: 0.03, green: 0.02, blue: 0.12, alpha: 1)
-        physicsWorld.gravity = CGVector(dx: 0, dy: -120)
+        physicsWorld.gravity = .zero          // no gravity — pure thrust control
         physicsWorld.contactDelegate = self
         setupCamera()
-        generateStars(from: 0, to: size.height * 3)
+        generateStars(from: 0, to: size.height * 4)
         setupHUD()
         buildRocket()
-        spawnFrontier = size.height * 0.8
+        spawnFrontier = size.height * 0.7
         spawnWave(at: spawnFrontier)
-        spawnFrontier += size.height * 0.7
+        spawnFrontier += size.height * 0.65
     }
 
-    override func willMove(from view: SKView) { isPaused = true }
+    override func willMove(from view: SKView) {
+        isPaused = true
+        lastUpdateTime = 0   // prevent giant dt spike on re-entry
+    }
 
     // MARK: - Camera
 
@@ -71,20 +80,22 @@ final class RocketScene: SKScene, SKPhysicsContactDelegate {
     // MARK: - Stars
 
     private func generateStars(from startY: CGFloat, to endY: CGFloat) {
-        let count = max(1, Int((endY - startY) / size.height * 70))
+        let range = max(endY - startY, 1)
+        let count = max(1, Int(range / size.height * 80))
         for _ in 0..<count {
-            let s = SKShapeNode(circleOfRadius: CGFloat.random(in: 0.5...2))
-            s.fillColor = SKColor(white: CGFloat.random(in: 0.6...1), alpha: CGFloat.random(in: 0.4...1))
+            let s = SKShapeNode(circleOfRadius: CGFloat.random(in: 0.5...2.2))
+            s.fillColor = SKColor(white: CGFloat.random(in: 0.6...1),
+                                  alpha: CGFloat.random(in: 0.35...1))
             s.strokeColor = .clear
             s.position = CGPoint(x: CGFloat.random(in: 0...size.width),
-                                 y: CGFloat.random(in: startY...max(startY + 1, endY)))
+                                 y: CGFloat.random(in: startY...endY))
             s.zPosition = -10
             s.name = "star"
             addChild(s)
         }
     }
 
-    // MARK: - HUD (camera-space so always visible)
+    // MARK: - HUD
 
     private func setupHUD() {
         oreLabel = SKLabelNode(text: "Ore: 0 / \(oreGoal)")
@@ -97,8 +108,7 @@ final class RocketScene: SKScene, SKPhysicsContactDelegate {
         cameraNode.addChild(oreLabel)
 
         let hint = SKLabelNode(text: "Left/Right: rotate  •  Center: thrust")
-        hint.fontName = "AvenirNext-Regular"
-        hint.fontSize = 14
+        hint.fontName = "AvenirNext-Regular"; hint.fontSize = 14
         hint.fontColor = SKColor(white: 0.5, alpha: 1)
         hint.horizontalAlignmentMode = .left
         hint.position = CGPoint(x: -size.width / 2 + 20, y: size.height / 2 - 70)
@@ -114,14 +124,12 @@ final class RocketScene: SKScene, SKPhysicsContactDelegate {
         rocket = SKSpriteNode(color: .clear, size: CGSize(width: 34, height: 130))
         rocket.position = CGPoint(x: size.width / 2, y: size.height * 0.35)
         rocket.zPosition = 10
+        rocket.addChild(makeRocketVisual())
 
-        let visual = makeRocketVisual()
-        rocket.addChild(visual)
-
-        let pb = SKPhysicsBody(rectangleOf: CGSize(width: 28, height: 118))
-        pb.affectedByGravity  = true
+        let pb = SKPhysicsBody(rectangleOf: CGSize(width: 26, height: 115))
+        pb.affectedByGravity  = false
         pb.allowsRotation     = true
-        pb.linearDamping      = 0.4
+        pb.linearDamping      = 0.55
         pb.angularDamping     = 4.0
         pb.categoryBitMask    = Cat.rocket
         pb.contactTestBitMask = Cat.rock | Cat.planet
@@ -135,8 +143,8 @@ final class RocketScene: SKScene, SKPhysicsContactDelegate {
 
         let body = SKShapeNode(rectOf: CGSize(width: 30, height: 130), cornerRadius: 10)
         body.fillColor = SKColor(white: 0.88, alpha: 1)
-        body.strokeColor = SKColor(white: 0.5, alpha: 1); body.lineWidth = 1.5; body.zPosition = 1
-        n.addChild(body)
+        body.strokeColor = SKColor(white: 0.5, alpha: 1)
+        body.lineWidth = 1.5; body.zPosition = 1; n.addChild(body)
 
         let np = CGMutablePath()
         np.move(to: CGPoint(x: -15, y: 55)); np.addLine(to: CGPoint(x: 15, y: 55))
@@ -156,7 +164,6 @@ final class RocketScene: SKScene, SKPhysicsContactDelegate {
             fin.strokeColor = .clear; fin.zPosition = 1; n.addChild(fin)
         }
 
-        // Flag
         let flagBg = SKShapeNode(rectOf: CGSize(width: 24, height: 15))
         flagBg.fillColor = SKColor(red: 0.85, green: 0.1, blue: 0.1, alpha: 1)
         flagBg.strokeColor = .clear; flagBg.position = CGPoint(x: 0, y: 12); flagBg.zPosition = 2
@@ -172,26 +179,25 @@ final class RocketScene: SKScene, SKPhysicsContactDelegate {
         n.addChild(canton)
 
         let badge = SKSpriteNode(imageNamed: "Drawing")
-        badge.size = CGSize(width: 14, height: 14); badge.position = CGPoint(x: 0, y: -20)
-        badge.zPosition = 2; n.addChild(badge)
+        badge.size = CGSize(width: 14, height: 14)
+        badge.position = CGPoint(x: 0, y: -20); badge.zPosition = 2; n.addChild(badge)
 
         return n
     }
 
-    // MARK: - Content spawning
+    // MARK: - Spawning
 
     private func spawnWave(at y: CGFloat) {
         let rockCount = Int.random(in: 2...5)
         for _ in 0..<rockCount {
-            let x = CGFloat.random(in: 50...(size.width - 50))
-            let yOff = CGFloat.random(in: 0...(size.height * 0.5))
-            spawnRock(at: CGPoint(x: x, y: y + yOff))
+            spawnRock(at: CGPoint(x: CGFloat.random(in: 60...(size.width - 60)),
+                                  y: y + CGFloat.random(in: 0...(size.height * 0.4))))
         }
         if Bool.random() {
             let radius = CGFloat.random(in: 40...90)
-            let oreAmt = max(1, Int(radius / 16))
-            let x = CGFloat.random(in: (radius + 60)...(size.width - radius - 60))
-            spawnPlanet(at: CGPoint(x: x, y: y + size.height * 0.25), radius: radius, ore: oreAmt)
+            let ore    = max(1, Int(radius / 16))
+            let x      = CGFloat.random(in: (radius + 80)...(size.width - radius - 80))
+            spawnPlanet(at: CGPoint(x: x, y: y + size.height * 0.2), radius: radius, ore: ore)
         }
     }
 
@@ -199,14 +205,15 @@ final class RocketScene: SKScene, SKPhysicsContactDelegate {
         let radius = CGFloat.random(in: 12...32)
         let rock = SKShapeNode(circleOfRadius: radius)
         rock.fillColor   = SKColor(red: 0.42, green: 0.38, blue: 0.34, alpha: 1)
-        rock.strokeColor = SKColor(red: 0.6, green: 0.56, blue: 0.50, alpha: 1)
+        rock.strokeColor = SKColor(red: 0.6,  green: 0.56, blue: 0.50, alpha: 1)
         rock.lineWidth   = 2; rock.position = pos; rock.zPosition = 5; rock.name = "rock"
         let pb = SKPhysicsBody(circleOfRadius: radius)
-        pb.affectedByGravity = false
-        pb.categoryBitMask    = Cat.rock
-        pb.contactTestBitMask = Cat.rocket
-        pb.collisionBitMask   = 0
-        pb.velocity = CGVector(dx: CGFloat.random(in: -90...90), dy: CGFloat.random(in: -50...30))
+        pb.affectedByGravity   = false
+        pb.categoryBitMask     = Cat.rock
+        pb.contactTestBitMask  = Cat.rocket
+        pb.collisionBitMask    = 0
+        pb.velocity = CGVector(dx: CGFloat.random(in: -70...70),
+                               dy: CGFloat.random(in: -40...20))
         rock.physicsBody = pb
         addChild(rock)
     }
@@ -226,24 +233,31 @@ final class RocketScene: SKScene, SKPhysicsContactDelegate {
     // MARK: - Game loop
 
     override func update(_ currentTime: TimeInterval) {
-        let dt = lastUpdateTime > 0 ? min(currentTime - lastUpdateTime, 0.05) : 0.016
+        let dt: CGFloat
+        if lastUpdateTime == 0 {
+            dt = 0.016
+        } else {
+            dt = CGFloat(min(currentTime - lastUpdateTime, 0.05))
+        }
         lastUpdateTime = currentTime
-        guard !hasWon else { return }
-        if isDead { return }
 
-        // Track session time for difficulty scaling
-        if sessionStartTime == 0 { sessionStartTime = currentTime }
-        scrollSpeed = min(150, 75 + CGFloat(currentTime - sessionStartTime) * 0.5)
+        guard !hasWon, !isDead else { return }
+
+        sessionElapsed += Double(dt)
+
+        // Ramp drift speed over 90 seconds
+        currentDrift = min(maxDrift, baseDrift + CGFloat(sessionElapsed) * 0.4)
 
         // Scroll camera upward
-        cameraNode.position.y += scrollSpeed * CGFloat(dt)
+        cameraNode.position.y += currentDrift * dt
 
-        // Death: rocket fell below camera bottom
-        if rocket.position.y < cameraNode.position.y - size.height / 2 - 80 {
+        // Death: rocket fell behind the camera
+        let floorY = cameraNode.position.y - size.height / 2 - 80
+        if rocket.position.y < floorY {
             isDead = true; needsRespawn = true; return
         }
 
-        // Controls
+        // Apply controls
         if let body = rocket.physicsBody {
             body.angularVelocity = -rotateDir * rotateSpeed
             if thrustOn {
@@ -253,22 +267,21 @@ final class RocketScene: SKScene, SKPhysicsContactDelegate {
             }
         }
 
-        // Horizontal wrap
-        if rocket.position.x < -50  { rocket.position.x = size.width  + 50 }
+        // Wrap horizontally
+        if rocket.position.x < -50         { rocket.position.x = size.width + 50 }
         if rocket.position.x > size.width + 50 { rocket.position.x = -50 }
 
-        // Spawn content ahead
+        // Extend world ahead of camera
         let cameraTop = cameraNode.position.y + size.height / 2
-        while spawnFrontier < cameraTop + size.height {
-            let prev = spawnFrontier
+        while spawnFrontier < cameraTop + size.height * 1.2 {
             spawnWave(at: spawnFrontier)
-            spawnFrontier += size.height * CGFloat.random(in: 0.5...0.8)
-            generateStars(from: prev, to: spawnFrontier + size.height * 0.3)
+            generateStars(from: spawnFrontier, to: spawnFrontier + size.height * 0.7)
+            spawnFrontier += size.height * CGFloat.random(in: 0.5...0.75)
         }
 
-        // Clean up content well below camera
-        let floor = cameraNode.position.y - size.height * 1.5
-        for node in children where node.position.y < floor {
+        // Cull old nodes far below camera
+        let cullY = cameraNode.position.y - size.height * 2
+        for node in children where node.position.y < cullY {
             if node.name == "rock" || node is PlanetNode || node.name == "star" {
                 node.removeFromParent()
             }
@@ -278,10 +291,7 @@ final class RocketScene: SKScene, SKPhysicsContactDelegate {
     override func didSimulatePhysics() {
         guard needsRespawn else { return }
         needsRespawn = false
-        if onLose != nil {
-            DispatchQueue.main.async { self.onLose?() }
-            return
-        }
+        if onLose != nil { DispatchQueue.main.async { self.onLose?() }; return }
         doRespawn()
     }
 
@@ -289,7 +299,6 @@ final class RocketScene: SKScene, SKPhysicsContactDelegate {
 
     func didBegin(_ contact: SKPhysicsContact) {
         let m = contact.bodyA.categoryBitMask | contact.bodyB.categoryBitMask
-
         if m & Cat.rocket != 0 && m & Cat.rock != 0 {
             guard !isDead, !hasWon else { return }
             isDead = true; needsRespawn = true
@@ -313,22 +322,22 @@ final class RocketScene: SKScene, SKPhysicsContactDelegate {
     private func doRespawn() {
         isDead = false
         ore = 0
+        sessionElapsed = 0
+        currentDrift = baseDrift
         updateOreLabel()
-        sessionStartTime = 0
-        scrollSpeed = 75
         cameraNode.position = CGPoint(x: size.width / 2, y: size.height / 2)
-        rocket.position = CGPoint(x: size.width / 2, y: size.height * 0.35)
+        rocket.position  = CGPoint(x: size.width / 2, y: size.height * 0.35)
         rocket.zRotation = 0
         rocket.physicsBody?.velocity = .zero
         rocket.physicsBody?.angularVelocity = 0
-        // Clear world content
+        // Remove all world content and regenerate
         for node in children where node.name == "rock" || node is PlanetNode || node.name == "star" {
             node.removeFromParent()
         }
-        generateStars(from: 0, to: size.height * 3)
-        spawnFrontier = size.height * 0.8
+        generateStars(from: 0, to: size.height * 4)
+        spawnFrontier = size.height * 0.7
         spawnWave(at: spawnFrontier)
-        spawnFrontier += size.height * 0.7
+        spawnFrontier += size.height * 0.65
     }
 
     private func triggerWin() {
@@ -358,26 +367,30 @@ final class RocketScene: SKScene, SKPhysicsContactDelegate {
         }
         guard let touch = touches.first else { return }
         let x = touch.location(in: self).x
-        if x < size.width / 3       { rotateDir =  1 }
+        if x < size.width / 3        { rotateDir =  1 }
         else if x > size.width * 2/3 { rotateDir = -1 }
-        else                         { thrustOn = true }
+        else                          { thrustOn = true }
     }
 
-    override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) { rotateDir = 0; thrustOn = false }
-    override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) { rotateDir = 0; thrustOn = false }
+    override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
+        rotateDir = 0; thrustOn = false
+    }
+    override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
+        rotateDir = 0; thrustOn = false
+    }
 
     func keyDown(key: String) {
         switch key {
-        case "left":  rotateDir =  1
-        case "right": rotateDir = -1
-        case "up", "space": thrustOn = true
+        case "left":        rotateDir =  1
+        case "right":       rotateDir = -1
+        case "up", "space": thrustOn  = true
         default: break
         }
     }
     func keyUp(key: String) {
         switch key {
         case "left", "right": rotateDir = 0
-        case "up", "space":   thrustOn = false
+        case "up", "space":   thrustOn  = false
         default: break
         }
     }

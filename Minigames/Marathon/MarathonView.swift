@@ -315,22 +315,24 @@ struct InfPingView: View {
     @FocusState private var focused: Bool
 
     var body: some View {
-        ZStack {
-            SpriteView(scene: scene).ignoresSafeArea()
-            Color.clear
-                .contentShape(Rectangle()).focusable().focused($focused)
-                .onKeyPress(keys: [.leftArrow, .rightArrow], phases: .all) { press in
-                    let key = press.key == .leftArrow ? "left" : "right"
-                    if press.phase == .down { scene.keyDown(key: key) }
-                    else if press.phase == .up { scene.keyUp(key: key) }
-                    return .handled
-                }
-        }
-        .onAppear {
-            focused = true
-            scene.onWin  = onWin
-            scene.onLose = onLose
-        }
+        SpriteView(scene: scene)
+            .ignoresSafeArea()
+            .overlay {
+                Color.clear
+                    .contentShape(Rectangle()).focusable().focused($focused)
+                    .allowsHitTesting(false)
+                    .onKeyPress(keys: [.leftArrow, .rightArrow], phases: .all) { press in
+                        let key = press.key == .leftArrow ? "left" : "right"
+                        if press.phase == .down { scene.keyDown(key: key) }
+                        else if press.phase == .up { scene.keyUp(key: key) }
+                        return .handled
+                    }
+            }
+            .onAppear {
+                focused = true
+                scene.onWin  = onWin
+                scene.onLose = onLose
+            }
     }
 }
 
