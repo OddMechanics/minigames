@@ -4,51 +4,51 @@ import SpriteKit
 struct PlatformerView: View {
     private let scene: PlatformerScene = {
         let s = PlatformerScene(size: CGSize(width: 1200, height: 700))
-        s.scaleMode = .aspectFill
+        s.scaleMode = .resizeFill
         return s
     }()
 
     @FocusState private var focused: Bool
 
     var body: some View {
-        ZStack {
-            SpriteView(scene: scene)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .ignoresSafeArea()
+        GeometryReader { geo in
+            ZStack {
+                SpriteView(scene: scene)
+                    .frame(width: geo.size.width, height: geo.size.height)
+                    .ignoresSafeArea()
 
-            // Transparent overlay that owns keyboard focus.
-            // Sitting on top of SpriteView ensures it isn't blocked by the
-            // SpriteKit responder chain on Mac Catalyst.
-            Color.clear
-                .contentShape(Rectangle())
-                .focusable()
-                .focused($focused)
-                .onKeyPress(
-                    keys: [.leftArrow, .rightArrow, .upArrow, .downArrow, .space],
-                    phases: .all
-                ) { press in
-                    switch press.phase {
-                    case .down:
-                        switch press.key {
-                        case .leftArrow:              scene.moveLeft()
-                        case .rightArrow:             scene.moveRight()
-                        case .upArrow, .downArrow,
-                             .space:                  scene.jump()
+                Color.clear
+                    .contentShape(Rectangle())
+                    .focusable()
+                    .focused($focused)
+                    .onKeyPress(
+                        keys: [.leftArrow, .rightArrow, .upArrow, .downArrow, .space],
+                        phases: .all
+                    ) { press in
+                        switch press.phase {
+                        case .down:
+                            switch press.key {
+                            case .leftArrow:              scene.moveLeft()
+                            case .rightArrow:             scene.moveRight()
+                            case .upArrow, .downArrow,
+                                 .space:                  scene.jump()
+                            default: break
+                            }
+                        case .up:
+                            switch press.key {
+                            case .leftArrow, .rightArrow: scene.stopHorizontal()
+                            default: break
+                            }
                         default: break
                         }
-                    case .up:
-                        switch press.key {
-                        case .leftArrow, .rightArrow: scene.stopHorizontal()
-                        default: break
-                        }
-                    default: break
+                        return .handled
                     }
-                    return .handled
-                }
+            }
+            .frame(width: geo.size.width, height: geo.size.height)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .ignoresSafeArea()
         .onAppear { focused = true }
-        .onTapGesture  { focused = true }
+        .onTapGesture { focused = true }
         .overlay(alignment: .bottom) {
             GameControls(scene: scene)
                 .padding(.bottom, 28)

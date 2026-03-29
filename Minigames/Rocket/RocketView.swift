@@ -11,48 +11,50 @@ struct RocketView: View {
     @FocusState private var focused: Bool
 
     var body: some View {
-        ZStack {
-            SpriteView(scene: scene)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .ignoresSafeArea()
+        GeometryReader { geo in
+            ZStack {
+                SpriteView(scene: scene)
+                    .frame(width: geo.size.width, height: geo.size.height)
+                    .ignoresSafeArea()
 
-            Color.clear
-                .contentShape(Rectangle())
-                .focusable()
-                .focused($focused)
-                .onKeyPress(
-                    keys: [.leftArrow, .rightArrow, .upArrow, .space],
-                    phases: .all
-                ) { press in
-                    let key: String
-                    switch press.key {
-                    case .leftArrow:  key = "left"
-                    case .rightArrow: key = "right"
-                    case .upArrow:    key = "up"
-                    default:          key = "space"
+                Color.clear
+                    .contentShape(Rectangle())
+                    .focusable()
+                    .focused($focused)
+                    .onKeyPress(
+                        keys: [.leftArrow, .rightArrow, .upArrow, .space],
+                        phases: .all
+                    ) { press in
+                        let key: String
+                        switch press.key {
+                        case .leftArrow:  key = "left"
+                        case .rightArrow: key = "right"
+                        case .upArrow:    key = "up"
+                        default:          key = "space"
+                        }
+                        if press.phase == .down { scene.keyDown(key: key) }
+                        else if press.phase == .up { scene.keyUp(key: key) }
+                        return .handled
                     }
-                    if press.phase == .down { scene.keyDown(key: key) }
-                    else if press.phase == .up { scene.keyUp(key: key) }
-                    return .handled
-                }
 
-            // On-screen controls overlay
-            VStack {
-                Spacer()
-                HStack(spacing: 50) {
-                    RocketButton(symbol: "rotate.left") { scene.keyDown(key: "left") }
-                        onRelease: { scene.keyUp(key: "left") }
-                    RocketButton(symbol: "flame.fill") { scene.keyDown(key: "up") }
-                        onRelease: { scene.keyUp(key: "up") }
-                    RocketButton(symbol: "rotate.right") { scene.keyDown(key: "right") }
-                        onRelease: { scene.keyUp(key: "right") }
+                VStack {
+                    Spacer()
+                    HStack(spacing: 50) {
+                        RocketButton(symbol: "rotate.left") { scene.keyDown(key: "left") }
+                            onRelease: { scene.keyUp(key: "left") }
+                        RocketButton(symbol: "flame.fill") { scene.keyDown(key: "up") }
+                            onRelease: { scene.keyUp(key: "up") }
+                        RocketButton(symbol: "rotate.right") { scene.keyDown(key: "right") }
+                            onRelease: { scene.keyUp(key: "right") }
+                    }
+                    .padding(.bottom, 28)
                 }
-                .padding(.bottom, 28)
             }
+            .frame(width: geo.size.width, height: geo.size.height)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .ignoresSafeArea()
         .onAppear { focused = true }
-        .onTapGesture  { focused = true }
+        .onTapGesture { focused = true }
         .toolbar(.hidden, for: .navigationBar)
     }
 }

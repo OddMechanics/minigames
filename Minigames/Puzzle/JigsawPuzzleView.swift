@@ -9,9 +9,12 @@ struct JigsawPuzzleView: View {
     }()
 
     var body: some View {
-        SpriteView(scene: scene)
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .ignoresSafeArea()
-            .toolbar(.hidden, for: .navigationBar)
+        GeometryReader { geo in
+            SpriteView(scene: scene)
+                .frame(width: geo.size.width, height: geo.size.height)
+                .ignoresSafeArea()
+        }
+        .ignoresSafeArea()
+        .toolbar(.hidden, for: .navigationBar)
     }
 }

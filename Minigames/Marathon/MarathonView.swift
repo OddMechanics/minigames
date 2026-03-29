@@ -366,50 +366,39 @@ struct MinigamesListView: View {
     @SwiftUI.State private var selectedGame: MiniGame? = nil
 
     var body: some View {
-        NavigationStack {
-            List {
-                Button { selectedGame = .platformer } label: { Label("Platformer",    systemImage: "gamecontroller.fill") }
-                Button { selectedGame = .jigsaw     } label: { Label("Jigsaw Puzzle", systemImage: "puzzlepiece.fill") }
-                Button { selectedGame = .rocket     } label: { Label("Rocket",        systemImage: "airplane") }
-                Button { selectedGame = .pingPong   } label: { Label("Ping Pong",     systemImage: "sportscourt.fill") }
+        if let game = selectedGame {
+            ZStack(alignment: .topLeading) {
+                switch game {
+                case .platformer: PlatformerView()
+                case .jigsaw:     JigsawPuzzleView()
+                case .rocket:     RocketView()
+                case .pingPong:   PingPongView()
+                }
+                Button { selectedGame = nil } label: {
+                    Image(systemName: "chevron.left")
+                        .font(.system(size: 20, weight: .bold))
+                        .foregroundStyle(.white)
+                        .frame(width: 48, height: 48)
+                        .background(.ultraThinMaterial, in: Circle())
+                }
+                .padding(.top, 52)
+                .padding(.leading, 16)
             }
-            .navigationTitle("Minigames")
-            .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") { dismiss() }
+        } else {
+            NavigationStack {
+                List {
+                    Button { selectedGame = .platformer } label: { Label("Platformer",    systemImage: "gamecontroller.fill") }
+                    Button { selectedGame = .jigsaw     } label: { Label("Jigsaw Puzzle", systemImage: "puzzlepiece.fill") }
+                    Button { selectedGame = .rocket     } label: { Label("Rocket",        systemImage: "airplane") }
+                    Button { selectedGame = .pingPong   } label: { Label("Ping Pong",     systemImage: "sportscourt.fill") }
+                }
+                .navigationTitle("Minigames")
+                .toolbar {
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button("Done") { dismiss() }
+                    }
                 }
             }
         }
-        .fullScreenCover(item: $selectedGame) { game in
-            GameFullscreenWrapper(game: game)
-        }
-    }
-}
-
-// Full-screen game wrapper with a back button overlay
-struct GameFullscreenWrapper: View {
-    let game: MiniGame
-    @Environment(\.dismiss) private var dismiss
-
-    var body: some View {
-        ZStack(alignment: .topLeading) {
-            switch game {
-            case .platformer: PlatformerView()
-            case .jigsaw:     JigsawPuzzleView()
-            case .rocket:     RocketView()
-            case .pingPong:   PingPongView()
-            }
-
-            Button { dismiss() } label: {
-                Image(systemName: "chevron.left")
-                    .font(.system(size: 20, weight: .bold))
-                    .foregroundStyle(.white)
-                    .frame(width: 48, height: 48)
-                    .background(.ultraThinMaterial, in: Circle())
-            }
-            .padding(.top, 52)
-            .padding(.leading, 16)
-        }
-        .ignoresSafeArea()
     }
 }
