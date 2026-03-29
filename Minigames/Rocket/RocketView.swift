@@ -50,7 +50,7 @@ struct RocketView: View {
         }
         .onAppear { focused = true }
         .onTapGesture  { focused = true }
-        .navigationBarTitleDisplayMode(.inline)
+        .toolbar(.hidden, for: .navigationBar)
     }
 }
 

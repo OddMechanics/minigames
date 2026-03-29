@@ -51,7 +51,7 @@ struct PlatformerView: View {
             GameControls(scene: scene)
                 .padding(.bottom, 28)
         }
-        .navigationBarTitleDisplayMode(.inline)
+        .toolbar(.hidden, for: .navigationBar)
     }
 }
 

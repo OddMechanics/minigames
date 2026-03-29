@@ -11,6 +11,6 @@ struct JigsawPuzzleView: View {
     var body: some View {
         SpriteView(scene: scene)
             .ignoresSafeArea()
-            .navigationBarTitleDisplayMode(.inline)
+            .toolbar(.hidden, for: .navigationBar)
     }
 }
