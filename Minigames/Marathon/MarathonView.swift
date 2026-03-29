@@ -101,10 +101,10 @@ struct InfiniteView: View {
         ZStack(alignment: .topLeading) {
             Color(red: 0.03, green: 0.02, blue: 0.12).ignoresSafeArea()
             VStack(spacing: 16) {
+                Spacer()
                 Text("Minigames")
                     .font(.system(size: 40, weight: .black, design: .rounded))
                     .foregroundColor(.white)
-                    .padding(.top, 60)
                 ForEach(MiniGame.allCases) { game in
                     Button { state = .standalone(game) } label: {
                         Text(game.displayName)
@@ -116,6 +116,7 @@ struct InfiniteView: View {
                 }
                 Spacer()
             }
+            .frame(maxWidth: .infinity)
             Button { state = .home } label: {
                 Image(systemName: "chevron.left")
                     .font(.system(size: 20, weight: .bold))
