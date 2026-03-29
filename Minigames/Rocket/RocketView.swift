@@ -12,7 +12,9 @@ struct RocketView: View {
 
     var body: some View {
         ZStack {
-            SpriteView(scene: scene).ignoresSafeArea()
+            SpriteView(scene: scene)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .ignoresSafeArea()
 
             Color.clear
                 .contentShape(Rectangle())
@@ -48,6 +50,7 @@ struct RocketView: View {
                 .padding(.bottom, 28)
             }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .onAppear { focused = true }
         .onTapGesture  { focused = true }
         .toolbar(.hidden, for: .navigationBar)

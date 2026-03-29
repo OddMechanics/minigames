@@ -208,7 +208,9 @@ struct InfPlatView: View {
 
     var body: some View {
         ZStack {
-            SpriteView(scene: scene).ignoresSafeArea()
+            SpriteView(scene: scene)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .ignoresSafeArea()
             Color.clear
                 .contentShape(Rectangle()).focusable().focused($focused)
                 .onKeyPress(keys: [.leftArrow, .rightArrow, .upArrow, .downArrow, .space],
@@ -227,6 +229,7 @@ struct InfPlatView: View {
                     return .handled
                 }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .onAppear {
             focused = true
             scene.onWin  = onWin
@@ -250,6 +253,7 @@ struct InfJigView: View {
 
     var body: some View {
         SpriteView(scene: scene)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
             .ignoresSafeArea()
             .onAppear { scene.onWin = onWin }
     }
@@ -270,7 +274,9 @@ struct InfRktView: View {
 
     var body: some View {
         ZStack {
-            SpriteView(scene: scene).ignoresSafeArea()
+            SpriteView(scene: scene)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .ignoresSafeArea()
             Color.clear
                 .contentShape(Rectangle()).focusable().focused($focused)
                 .onKeyPress(keys: [.leftArrow, .rightArrow, .upArrow, .space], phases: .all) { press in
@@ -294,6 +300,7 @@ struct InfRktView: View {
                 .padding(.bottom, 28)
             }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .onAppear {
             focused = true
             scene.onWin  = onWin
@@ -317,6 +324,7 @@ struct InfPingView: View {
 
     var body: some View {
         SpriteView(scene: scene)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
             .ignoresSafeArea()
             .overlay {
                 Color.clear

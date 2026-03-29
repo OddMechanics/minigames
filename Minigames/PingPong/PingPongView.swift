@@ -12,6 +12,7 @@ struct PingPongView: View {
 
     var body: some View {
         SpriteView(scene: scene)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
             .ignoresSafeArea()
             // Keyboard overlay sits behind touches (allowsHitTesting false)
             // so the SpriteView receives all touch input directly.

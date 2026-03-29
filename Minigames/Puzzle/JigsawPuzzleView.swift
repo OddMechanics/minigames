@@ -10,6 +10,7 @@ struct JigsawPuzzleView: View {
 
     var body: some View {
         SpriteView(scene: scene)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
             .ignoresSafeArea()
             .toolbar(.hidden, for: .navigationBar)
     }

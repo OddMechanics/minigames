@@ -13,6 +13,7 @@ struct PlatformerView: View {
     var body: some View {
         ZStack {
             SpriteView(scene: scene)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .ignoresSafeArea()
 
             // Transparent overlay that owns keyboard focus.
@@ -45,6 +46,7 @@ struct PlatformerView: View {
                     return .handled
                 }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .onAppear { focused = true }
         .onTapGesture  { focused = true }
         .overlay(alignment: .bottom) {
