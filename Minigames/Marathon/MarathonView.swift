@@ -2,99 +2,170 @@ import SwiftUI
 import SpriteKit
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Marathon mode: play random minigames back-to-back.
-// Lose condition per game:
-//   Platformer — 3 deaths
-//   Jigsaw     — no lose (must complete to advance)
-//   Rocket     — 1 hit
+// Infinite Mode: play random minigames back-to-back until you lose.
+// Lose conditions: Platformer = 1 death, Rocket = 1 hit, PingPong = lose match,
+//                  Jigsaw = must complete to advance (no lose).
 // ─────────────────────────────────────────────────────────────────────────────
 
 enum MiniGame: CaseIterable, Equatable {
-    case platformer, jigsaw, rocket
+    case platformer, jigsaw, rocket, pingPong
     var displayName: String {
         switch self {
         case .platformer: return "Platformer"
         case .jigsaw:     return "Jigsaw Puzzle"
         case .rocket:     return "Rocket"
+        case .pingPong:   return "Ping Pong"
         }
     }
 }
 
-struct MarathonView: View {
-    @State private var gamesPlayed    = 0
-    @State private var currentGame: MiniGame = .platformer
-    @State private var showDeath      = false
-    @State private var excludedGame: MiniGame? = nil
-    @State private var sessionID      = UUID()
+// InfiniteView manages the full infinite-mode lifecycle.
+// ContentView uses this as its root.
+struct InfiniteView: View {
+    enum State { case home, playing, dead(gamesCompleted: Int, lostOn: MiniGame) }
+
+    @SwiftUI.State private var state: State = .home
+    @SwiftUI.State private var currentGame: MiniGame = .platformer
+    @SwiftUI.State private var excludedGame: MiniGame? = nil
+    @SwiftUI.State private var gamesPlayed = 0
+    @SwiftUI.State private var sessionID   = UUID()
+    @SwiftUI.State private var showMinigames = false
 
     var body: some View {
-        ZStack {
-            if showDeath {
-                deathScreen
-            } else {
-                MarathonGameView(
-                    game: currentGame,
-                    onWin:  handleWin,
-                    onLose: handleLose
-                )
-                .id(sessionID)
-            }
+        switch state {
+        case .home:                        homeView
+        case .playing:                     playingView
+        case .dead(let n, let game):       deathView(gamesCompleted: n, lostOn: game)
         }
-        .navigationBarTitleDisplayMode(.inline)
-        .navigationTitle("Marathon – Game \(gamesPlayed + 1)")
-        .onAppear(perform: newSession)
     }
 
-    // MARK: - Session management
+    // MARK: - Home
 
-    private func newSession() {
-        showDeath   = false
-        gamesPlayed = 0
-        pick(excluding: excludedGame)
-        sessionID   = UUID()
+    private var homeView: some View {
+        ZStack(alignment: .bottom) {
+            Color(red: 0.03, green: 0.02, blue: 0.12).ignoresSafeArea()
+
+            // Stars decoration
+            Canvas { ctx, size in
+                for i in 0..<120 {
+                    let x = Double((i * 97 + 31) % Int(size.width))
+                    let y = Double((i * 61 + 17) % Int(size.height))
+                    let r = Double((i % 3) + 1) * 0.7
+                    ctx.fill(Path(ellipseIn: CGRect(x: x, y: y, width: r*2, height: r*2)),
+                             with: .color(.white.opacity(0.5 + Double(i % 5) * 0.1)))
+                }
+            }
+            .ignoresSafeArea()
+
+            VStack(spacing: 20) {
+                Spacer()
+                Text("∞ Infinite Mode")
+                    .font(.system(size: 52, weight: .black, design: .rounded))
+                    .foregroundColor(.white)
+                Text("Play random minigames until you lose")
+                    .font(.system(size: 18, weight: .medium))
+                    .foregroundColor(Color(white: 0.65))
+                Button {
+                    startPlaying(excluding: nil)
+                } label: {
+                    Text("Play")
+                        .font(.system(size: 28, weight: .bold))
+                        .foregroundColor(.black)
+                        .frame(width: 220, height: 60)
+                        .background(Color.yellow)
+                        .clipShape(RoundedRectangle(cornerRadius: 16))
+                }
+                .padding(.top, 10)
+                Spacer()
+            }
+
+            Button {
+                showMinigames = true
+            } label: {
+                Text("View Minigames")
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 28)
+                    .padding(.vertical, 13)
+                    .background(Color(white: 1, opacity: 0.12), in: RoundedRectangle(cornerRadius: 14))
+            }
+            .padding(.bottom, 32)
+        }
+        .sheet(isPresented: $showMinigames) { MinigamesListView() }
     }
 
-    private func pick(excluding: MiniGame?) {
-        var pool = MiniGame.allCases
-        if let ex = excluding { pool.removeAll { $0 == ex } }
-        currentGame = pool.randomElement() ?? .platformer
+    // MARK: - Playing
+
+    private var playingView: some View {
+        InfiniteGameView(
+            game: currentGame,
+            onWin:  handleWin,
+            onLose: handleLose
+        )
+        .id(sessionID)
+    }
+
+    private func startPlaying(excluding: MiniGame?) {
+        excludedGame = excluding
+        gamesPlayed  = 0
+        currentGame  = randomGame(excluding: excluding)
+        sessionID    = UUID()
+        state        = .playing
     }
 
     private func handleWin() {
         gamesPlayed += 1
-        pick(excluding: excludedGame)
-        sessionID = UUID()
+        currentGame  = randomGame(excluding: excludedGame)
+        sessionID    = UUID()
     }
 
     private func handleLose() {
-        showDeath = true
+        state = .dead(gamesCompleted: gamesPlayed, lostOn: currentGame)
     }
 
-    // MARK: - Death screen
+    private func randomGame(excluding ex: MiniGame?) -> MiniGame {
+        var pool = MiniGame.allCases
+        if let ex { pool.removeAll { $0 == ex } }
+        return pool.randomElement() ?? .platformer
+    }
 
-    private var deathScreen: some View {
+    // MARK: - Death screen (blue)
+
+    private func deathView(gamesCompleted: Int, lostOn: MiniGame) -> some View {
         ZStack {
-            Color(red: 0.05, green: 0.04, blue: 0.14).ignoresSafeArea()
+            Color(red: 0.04, green: 0.18, blue: 0.46).ignoresSafeArea()
             VStack(spacing: 22) {
                 Text("Game Over")
                     .font(.system(size: 54, weight: .black, design: .rounded))
-                    .foregroundColor(.yellow)
-                Text("You completed \(gamesPlayed) \(gamesPlayed == 1 ? "game" : "games")")
-                    .font(.system(size: 26, weight: .semibold))
                     .foregroundColor(.white)
-                Text("Lost on: \(currentGame.displayName)")
+                Text("You completed \(gamesCompleted) \(gamesCompleted == 1 ? "game" : "games")")
+                    .font(.system(size: 26, weight: .semibold))
+                    .foregroundColor(Color(white: 0.90))
+                Text("Lost on: \(lostOn.displayName)")
                     .font(.system(size: 18))
-                    .foregroundColor(Color(white: 0.6))
-                Button {
-                    excludedGame = currentGame
-                    newSession()
-                } label: {
-                    Text("Play Again")
-                        .font(.system(size: 22, weight: .bold))
-                        .foregroundColor(.black)
-                        .frame(width: 200, height: 54)
-                        .background(Color.yellow)
-                        .clipShape(RoundedRectangle(cornerRadius: 14))
+                    .foregroundColor(Color(white: 0.70))
+
+                HStack(spacing: 20) {
+                    Button {
+                        startPlaying(excluding: lostOn)
+                    } label: {
+                        Text("Play Again")
+                            .font(.system(size: 20, weight: .bold))
+                            .foregroundColor(.black)
+                            .frame(width: 170, height: 52)
+                            .background(Color.yellow)
+                            .clipShape(RoundedRectangle(cornerRadius: 14))
+                    }
+                    Button {
+                        state = .home
+                    } label: {
+                        Text("Home")
+                            .font(.system(size: 20, weight: .bold))
+                            .foregroundColor(.white)
+                            .frame(width: 130, height: 52)
+                            .background(Color(white: 1, opacity: 0.18))
+                            .clipShape(RoundedRectangle(cornerRadius: 14))
+                    }
                 }
                 .padding(.top, 8)
             }
@@ -103,30 +174,31 @@ struct MarathonView: View {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// MARK: - Per-game view (creates a fresh scene each time via .id)
+// MARK: - Per-game view router
 // ─────────────────────────────────────────────────────────────────────────────
 
-struct MarathonGameView: View {
+struct InfiniteGameView: View {
     let game:   MiniGame
     let onWin:  () -> Void
     let onLose: () -> Void
 
     var body: some View {
         switch game {
-        case .platformer: MarathonPlatView(onWin: onWin, onLose: onLose)
-        case .jigsaw:     MarathonJigView(onWin: onWin)
-        case .rocket:     MarathonRktView(onWin: onWin, onLose: onLose)
+        case .platformer: InfPlatView(onWin: onWin, onLose: onLose)
+        case .jigsaw:     InfJigView(onWin: onWin)
+        case .rocket:     InfRktView(onWin: onWin, onLose: onLose)
+        case .pingPong:   InfPingView(onWin: onWin, onLose: onLose)
         }
     }
 }
 
-// MARK: - Platformer
+// MARK: - Platformer (1 death = lose)
 
-struct MarathonPlatView: View {
+struct InfPlatView: View {
     let onWin: () -> Void
     let onLose: () -> Void
 
-    @State private var scene: PlatformerScene = {
+    @SwiftUI.State private var scene: PlatformerScene = {
         let s = PlatformerScene(size: CGSize(width: 1200, height: 700))
         s.scaleMode = .resizeFill
         return s
@@ -148,9 +220,7 @@ struct MarathonPlatView: View {
                         default: scene.jump()
                         }
                     case .up:
-                        if press.key == .leftArrow || press.key == .rightArrow {
-                            scene.stopHorizontal()
-                        }
+                        if press.key == .leftArrow || press.key == .rightArrow { scene.stopHorizontal() }
                     default: break
                     }
                     return .handled
@@ -160,20 +230,18 @@ struct MarathonPlatView: View {
             focused = true
             scene.onWin  = onWin
             scene.onLose = onLose
-            scene.marathonLives = 3
+            scene.marathonLives = 1
         }
-        .overlay(alignment: .bottom) {
-            GameControls(scene: scene).padding(.bottom, 28)
-        }
+        .overlay(alignment: .bottom) { GameControls(scene: scene).padding(.bottom, 28) }
     }
 }
 
 // MARK: - Jigsaw
 
-struct MarathonJigView: View {
+struct InfJigView: View {
     let onWin: () -> Void
 
-    @State private var scene: JigsawPuzzleScene = {
+    @SwiftUI.State private var scene: JigsawPuzzleScene = {
         let s = JigsawPuzzleScene(size: CGSize(width: 1200, height: 700))
         s.scaleMode = .resizeFill
         return s
@@ -188,11 +256,11 @@ struct MarathonJigView: View {
 
 // MARK: - Rocket
 
-struct MarathonRktView: View {
+struct InfRktView: View {
     let onWin:  () -> Void
     let onLose: () -> Void
 
-    @State private var scene: RocketScene = {
+    @SwiftUI.State private var scene: RocketScene = {
         let s = RocketScene(size: CGSize(width: 1200, height: 700))
         s.scaleMode = .resizeFill
         return s
@@ -229,6 +297,64 @@ struct MarathonRktView: View {
             focused = true
             scene.onWin  = onWin
             scene.onLose = onLose
+        }
+    }
+}
+
+// MARK: - Ping Pong
+
+struct InfPingView: View {
+    let onWin:  () -> Void
+    let onLose: () -> Void
+
+    @SwiftUI.State private var scene: PingPongScene = {
+        let s = PingPongScene(size: CGSize(width: 1200, height: 700))
+        s.scaleMode = .resizeFill
+        return s
+    }()
+    @FocusState private var focused: Bool
+
+    var body: some View {
+        ZStack {
+            SpriteView(scene: scene).ignoresSafeArea()
+            Color.clear
+                .contentShape(Rectangle()).focusable().focused($focused)
+                .onKeyPress(keys: [.leftArrow, .rightArrow], phases: .all) { press in
+                    let key = press.key == .leftArrow ? "left" : "right"
+                    if press.phase == .down { scene.keyDown(key: key) }
+                    else if press.phase == .up { scene.keyUp(key: key) }
+                    return .handled
+                }
+        }
+        .onAppear {
+            focused = true
+            scene.onWin  = onWin
+            scene.onLose = onLose
+        }
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MARK: - Minigames list (presented as a sheet)
+// ─────────────────────────────────────────────────────────────────────────────
+
+struct MinigamesListView: View {
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            List {
+                NavigationLink(destination: PlatformerView())   { Label("Platformer",    systemImage: "gamecontroller.fill") }
+                NavigationLink(destination: JigsawPuzzleView()) { Label("Jigsaw Puzzle", systemImage: "puzzlepiece.fill") }
+                NavigationLink(destination: RocketView())       { Label("Rocket",        systemImage: "airplane") }
+                NavigationLink(destination: PingPongView())     { Label("Ping Pong",     systemImage: "sportscourt.fill") }
+            }
+            .navigationTitle("Minigames")
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") { dismiss() }
+                }
+            }
         }
     }
 }

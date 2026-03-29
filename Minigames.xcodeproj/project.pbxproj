@@ -17,6 +17,8 @@
 		A11111111111111111111108 /* RocketScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = A21111111111111111111108 /* RocketScene.swift */; };
 		A11111111111111111111109 /* RocketView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A21111111111111111111109 /* RocketView.swift */; };
 		A1111111111111111111110A /* MarathonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2111111111111111111110A /* MarathonView.swift */; };
+		A1111111111111111111110B /* PingPongScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2111111111111111111110B /* PingPongScene.swift */; };
+		A1111111111111111111110C /* PingPongView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2111111111111111111110C /* PingPongView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -31,6 +33,8 @@
 		A21111111111111111111108 /* RocketScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RocketScene.swift; sourceTree = "<group>"; };
 		A21111111111111111111109 /* RocketView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RocketView.swift; sourceTree = "<group>"; };
 		A2111111111111111111110A /* MarathonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarathonView.swift; sourceTree = "<group>"; };
+		A2111111111111111111110B /* PingPongScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PingPongScene.swift; sourceTree = "<group>"; };
+		A2111111111111111111110C /* PingPongView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PingPongView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -61,6 +65,7 @@
 				A41111111111111111111103 /* Puzzle */,
 				A41111111111111111111104 /* Rocket */,
 				A41111111111111111111105 /* Marathon */,
+				A41111111111111111111106 /* PingPong */,
 				A21111111111111111111105 /* Assets.xcassets */,
 			);
 			path = Minigames;
@@ -99,6 +104,15 @@
 				A2111111111111111111110A /* MarathonView.swift */,
 			);
 			path = Marathon;
+			sourceTree = "<group>";
+		};
+		A41111111111111111111106 /* PingPong */ = {
+			isa = PBXGroup;
+			children = (
+				A2111111111111111111110B /* PingPongScene.swift */,
+				A2111111111111111111110C /* PingPongView.swift */,
+			);
+			path = PingPong;
 			sourceTree = "<group>";
 		};
 		A41111111111111111111199 /* Products */ = {
@@ -187,6 +201,8 @@
 				A11111111111111111111108 /* RocketScene.swift in Sources */,
 				A11111111111111111111109 /* RocketView.swift in Sources */,
 				A1111111111111111111110A /* MarathonView.swift in Sources */,
+				A1111111111111111111110B /* PingPongScene.swift in Sources */,
+				A1111111111111111111110C /* PingPongView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
