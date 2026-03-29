@@ -23,19 +23,20 @@ enum MiniGame: CaseIterable, Equatable, Identifiable {
 // InfiniteView manages the full infinite-mode lifecycle.
 // ContentView uses this as its root.
 struct InfiniteView: View {
-    enum State { case home, playing, dead(gamesCompleted: Int, lostOn: MiniGame) }
+    enum State { case home, browsing, playing, standalone(MiniGame), dead(gamesCompleted: Int, lostOn: MiniGame) }
 
     @SwiftUI.State private var state: State = .home
     @SwiftUI.State private var currentGame: MiniGame = .platformer
     @SwiftUI.State private var excludedGame: MiniGame? = nil
     @SwiftUI.State private var gamesPlayed = 0
     @SwiftUI.State private var sessionID   = UUID()
-    @SwiftUI.State private var showMinigames = false
 
     var body: some View {
         switch state {
         case .home:                        homeView
+        case .browsing:                    browsingView
         case .playing:                     playingView
+        case .standalone(let game):        standaloneView(game: game)
         case .dead(let n, let game):       deathView(gamesCompleted: n, lostOn: game)
         }
     }
@@ -81,7 +82,7 @@ struct InfiniteView: View {
             }
 
             Button {
-                showMinigames = true
+                state = .browsing
             } label: {
                 Text("View Minigames")
                     .font(.system(size: 18, weight: .semibold))
@@ -92,7 +93,61 @@ struct InfiniteView: View {
             }
             .padding(.bottom, 32)
         }
-        .sheet(isPresented: $showMinigames) { MinigamesListView() }
+    }
+
+    // MARK: - Browsing
+
+    private var browsingView: some View {
+        ZStack(alignment: .topLeading) {
+            Color(red: 0.03, green: 0.02, blue: 0.12).ignoresSafeArea()
+            VStack(spacing: 16) {
+                Text("Minigames")
+                    .font(.system(size: 40, weight: .black, design: .rounded))
+                    .foregroundColor(.white)
+                    .padding(.top, 60)
+                ForEach(MiniGame.allCases) { game in
+                    Button { state = .standalone(game) } label: {
+                        Text(game.displayName)
+                            .font(.system(size: 22, weight: .semibold))
+                            .foregroundColor(.white)
+                            .frame(maxWidth: 300, minHeight: 56)
+                            .background(Color(white: 1, opacity: 0.12), in: RoundedRectangle(cornerRadius: 14))
+                    }
+                }
+                Spacer()
+            }
+            Button { state = .home } label: {
+                Image(systemName: "chevron.left")
+                    .font(.system(size: 20, weight: .bold))
+                    .foregroundStyle(.white)
+                    .frame(width: 48, height: 48)
+                    .background(.ultraThinMaterial, in: Circle())
+            }
+            .padding(.top, 52)
+            .padding(.leading, 16)
+        }
+    }
+
+    // MARK: - Standalone game
+
+    private func standaloneView(game: MiniGame) -> some View {
+        ZStack(alignment: .topLeading) {
+            switch game {
+            case .platformer: PlatformerView()
+            case .jigsaw:     JigsawPuzzleView()
+            case .rocket:     RocketView()
+            case .pingPong:   PingPongView()
+            }
+            Button { state = .browsing } label: {
+                Image(systemName: "chevron.left")
+                    .font(.system(size: 20, weight: .bold))
+                    .foregroundStyle(.white)
+                    .frame(width: 48, height: 48)
+                    .background(.ultraThinMaterial, in: Circle())
+            }
+            .padding(.top, 52)
+            .padding(.leading, 16)
+        }
     }
 
     // MARK: - Playing
@@ -357,48 +412,3 @@ struct InfPingView: View {
     }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// MARK: - Minigames list (presented as a sheet)
-// ─────────────────────────────────────────────────────────────────────────────
-
-struct MinigamesListView: View {
-    @Environment(\.dismiss) private var dismiss
-    @SwiftUI.State private var selectedGame: MiniGame? = nil
-
-    var body: some View {
-        if let game = selectedGame {
-            ZStack(alignment: .topLeading) {
-                switch game {
-                case .platformer: PlatformerView()
-                case .jigsaw:     JigsawPuzzleView()
-                case .rocket:     RocketView()
-                case .pingPong:   PingPongView()
-                }
-                Button { selectedGame = nil } label: {
-                    Image(systemName: "chevron.left")
-                        .font(.system(size: 20, weight: .bold))
-                        .foregroundStyle(.white)
-                        .frame(width: 48, height: 48)
-                        .background(.ultraThinMaterial, in: Circle())
-                }
-                .padding(.top, 52)
-                .padding(.leading, 16)
-            }
-        } else {
-            NavigationStack {
-                List {
-                    Button { selectedGame = .platformer } label: { Label("Platformer",    systemImage: "gamecontroller.fill") }
-                    Button { selectedGame = .jigsaw     } label: { Label("Jigsaw Puzzle", systemImage: "puzzlepiece.fill") }
-                    Button { selectedGame = .rocket     } label: { Label("Rocket",        systemImage: "airplane") }
-                    Button { selectedGame = .pingPong   } label: { Label("Ping Pong",     systemImage: "sportscourt.fill") }
-                }
-                .navigationTitle("Minigames")
-                .toolbar {
-                    ToolbarItem(placement: .confirmationAction) {
-                        Button("Done") { dismiss() }
-                    }
-                }
-            }
-        }
-    }
-}
