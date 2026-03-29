@@ -98,12 +98,24 @@ struct InfiniteView: View {
     // MARK: - Playing
 
     private var playingView: some View {
-        InfiniteGameView(
-            game: currentGame,
-            onWin:  handleWin,
-            onLose: handleLose
-        )
-        .id(sessionID)
+        ZStack(alignment: .topLeading) {
+            InfiniteGameView(
+                game: currentGame,
+                onWin:  handleWin,
+                onLose: handleLose
+            )
+            .id(sessionID)
+
+            Button { state = .home } label: {
+                Image(systemName: "chevron.left")
+                    .font(.system(size: 20, weight: .bold))
+                    .foregroundStyle(.white)
+                    .frame(width: 48, height: 48)
+                    .background(.ultraThinMaterial, in: Circle())
+            }
+            .padding(.top, 52)
+            .padding(.leading, 16)
+        }
     }
 
     private func startPlaying(excluding: MiniGame?) {
