@@ -248,15 +248,6 @@ final class RocketScene: SKScene, SKPhysicsContactDelegate {
         // Ramp drift speed over 90 seconds
         currentDrift = min(maxDrift, baseDrift + CGFloat(sessionElapsed) * 0.4)
 
-        // Scroll camera upward
-        cameraNode.position.y += currentDrift * dt
-
-        // Death: rocket fell behind the camera
-        let floorY = cameraNode.position.y - size.height / 2 - 80
-        if rocket.position.y < floorY {
-            isDead = true; needsRespawn = true; return
-        }
-
         // Apply controls
         if let body = rocket.physicsBody {
             body.angularVelocity = -rotateDir * rotateSpeed
@@ -267,9 +258,18 @@ final class RocketScene: SKScene, SKPhysicsContactDelegate {
             }
         }
 
+        // Camera follows rocket (smooth, slight lead upward)
+        let targetX = rocket.position.x
+        let targetY = rocket.position.y + 60
+        cameraNode.position.x += (targetX - cameraNode.position.x) * 0.12
+        cameraNode.position.y += (targetY - cameraNode.position.y) * 0.12
+
         // Wrap horizontally
-        if rocket.position.x < -50         { rocket.position.x = size.width + 50 }
-        if rocket.position.x > size.width + 50 { rocket.position.x = -50 }
+        if rocket.position.x < -50              { rocket.position.x = size.width + 50 }
+        if rocket.position.x > size.width + 50  { rocket.position.x = -50 }
+
+        // Drift: slowly push rocket downward so player must keep thrusting
+        rocket.physicsBody?.applyForce(CGVector(dx: 0, dy: -currentDrift * 2.5))
 
         // Extend world ahead of camera
         let cameraTop = cameraNode.position.y + size.height / 2
