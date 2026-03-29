@@ -258,30 +258,20 @@ final class RocketScene: SKScene, SKPhysicsContactDelegate {
             }
         }
 
-        // Camera follows rocket (smooth, slight lead upward)
-        let targetX = rocket.position.x
-        let targetY = rocket.position.y + 60
-        cameraNode.position.x += (targetX - cameraNode.position.x) * 0.12
-        cameraNode.position.y += (targetY - cameraNode.position.y) * 0.12
+        // Camera locked to rocket exactly
+        cameraNode.position = rocket.position
 
-        // Wrap horizontally
-        if rocket.position.x < -50              { rocket.position.x = size.width + 50 }
-        if rocket.position.x > size.width + 50  { rocket.position.x = -50 }
-
-        // Drift: slowly push rocket downward so player must keep thrusting
-        rocket.physicsBody?.applyForce(CGVector(dx: 0, dy: -currentDrift * 2.5))
-
-        // Extend world ahead of camera
-        let cameraTop = cameraNode.position.y + size.height / 2
-        while spawnFrontier < cameraTop + size.height * 1.2 {
+        // Extend world in all directions around rocket
+        let rp = rocket.position
+        while spawnFrontier < rp.y + size.height * 1.5 {
             spawnWave(at: spawnFrontier)
             generateStars(from: spawnFrontier, to: spawnFrontier + size.height * 0.7)
             spawnFrontier += size.height * CGFloat.random(in: 0.5...0.75)
         }
 
-        // Cull old nodes far below camera
-        let cullY = cameraNode.position.y - size.height * 2
-        for node in children where node.position.y < cullY {
+        // Cull nodes far from rocket
+        let cullDist: CGFloat = size.height * 2.5
+        for node in children where abs(node.position.y - rp.y) > cullDist || abs(node.position.x - rp.x) > cullDist {
             if node.name == "rock" || node is PlanetNode || node.name == "star" {
                 node.removeFromParent()
             }
@@ -325,8 +315,8 @@ final class RocketScene: SKScene, SKPhysicsContactDelegate {
         sessionElapsed = 0
         currentDrift = baseDrift
         updateOreLabel()
-        cameraNode.position = CGPoint(x: size.width / 2, y: size.height / 2)
-        rocket.position  = CGPoint(x: size.width / 2, y: size.height * 0.35)
+        rocket.position  = CGPoint(x: size.width / 2, y: size.height / 2)
+        cameraNode.position = rocket.position
         rocket.zRotation = 0
         rocket.physicsBody?.velocity = .zero
         rocket.physicsBody?.angularVelocity = 0
