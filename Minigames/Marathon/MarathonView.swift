@@ -8,7 +8,7 @@ import SpriteKit
 // ─────────────────────────────────────────────────────────────────────────────
 
 enum MiniGame: CaseIterable, Equatable, Identifiable {
-    case platformer, jigsaw, rocket, pingPong
+    case platformer, jigsaw, rocket, pingPong, driving, golf, dungeon
     var id: Self { self }
     var displayName: String {
         switch self {
@@ -16,6 +16,9 @@ enum MiniGame: CaseIterable, Equatable, Identifiable {
         case .jigsaw:     return "Jigsaw Puzzle"
         case .rocket:     return "Rocket"
         case .pingPong:   return "Ping Pong"
+        case .driving:    return "Driving Simulator"
+        case .golf:       return "Mini Golf"
+        case .dungeon:    return "Dungeon"
         }
     }
 }
@@ -138,6 +141,9 @@ struct InfiniteView: View {
             case .jigsaw:     JigsawPuzzleView()
             case .rocket:     RocketView()
             case .pingPong:   PingPongView()
+            case .driving:    DrivingView(mapMode: .short)
+            case .golf:       GolfView(mapMode: .short)
+            case .dungeon:    DungeonView(mapMode: .short)
             }
             Button { state = .browsing } label: {
                 Image(systemName: "chevron.left")
@@ -257,6 +263,9 @@ struct InfiniteGameView: View {
         case .jigsaw:     InfJigView(onWin: onWin)
         case .rocket:     InfRktView(onWin: onWin, onLose: onLose)
         case .pingPong:   InfPingView(onWin: onWin, onLose: onLose)
+        case .driving:    InfDriveView(onWin: onWin, onLose: onLose)
+        case .golf:       InfGolfView(onWin: onWin, onLose: onLose)
+        case .dungeon:    InfDungView(onWin: onWin, onLose: onLose)
         }
     }
 }
@@ -374,6 +383,39 @@ struct InfRktView: View {
             scene.onWin  = onWin
             scene.onLose = onLose
         }
+    }
+}
+
+// MARK: - Driving
+
+struct InfDriveView: View {
+    let onWin:  () -> Void
+    let onLose: () -> Void
+
+    var body: some View {
+        DrivingView(mapMode: .short, onWin: onWin, onLose: onLose)
+    }
+}
+
+// MARK: - Golf
+
+struct InfGolfView: View {
+    let onWin:  () -> Void
+    let onLose: () -> Void
+
+    var body: some View {
+        GolfView(mapMode: .short, onWin: onWin, onLose: onLose)
+    }
+}
+
+// MARK: - Dungeon
+
+struct InfDungView: View {
+    let onWin:  () -> Void
+    let onLose: () -> Void
+
+    var body: some View {
+        DungeonView(mapMode: .short, onWin: onWin, onLose: onLose)
     }
 }
 

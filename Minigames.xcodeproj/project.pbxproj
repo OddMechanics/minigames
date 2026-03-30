@@ -19,6 +19,12 @@
 		A1111111111111111111110A /* MarathonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2111111111111111111110A /* MarathonView.swift */; };
 		A1111111111111111111110B /* PingPongScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2111111111111111111110B /* PingPongScene.swift */; };
 		A1111111111111111111110C /* PingPongView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2111111111111111111110C /* PingPongView.swift */; };
+		A1111111111111111111110D /* DrivingScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2111111111111111111110D /* DrivingScene.swift */; };
+		A1111111111111111111110E /* DrivingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2111111111111111111110E /* DrivingView.swift */; };
+		B1111111111111111111110F /* GolfScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2111111111111111111110F /* GolfScene.swift */; };
+		B11111111111111111111110 /* GolfView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B21111111111111111111110 /* GolfView.swift */; };
+		C111111111111111111111101 /* DungeonScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = C111111111111111111111201 /* DungeonScene.swift */; };
+		C111111111111111111111102 /* DungeonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C111111111111111111111202 /* DungeonView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -35,6 +41,12 @@
 		A2111111111111111111110A /* MarathonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarathonView.swift; sourceTree = "<group>"; };
 		A2111111111111111111110B /* PingPongScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PingPongScene.swift; sourceTree = "<group>"; };
 		A2111111111111111111110C /* PingPongView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PingPongView.swift; sourceTree = "<group>"; };
+		A2111111111111111111110D /* DrivingScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DrivingScene.swift; sourceTree = "<group>"; };
+		A2111111111111111111110E /* DrivingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DrivingView.swift; sourceTree = "<group>"; };
+		B2111111111111111111110F /* GolfScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GolfScene.swift; sourceTree = "<group>"; };
+		B21111111111111111111110 /* GolfView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GolfView.swift; sourceTree = "<group>"; };
+		C111111111111111111111201 /* DungeonScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DungeonScene.swift; sourceTree = "<group>"; };
+		C111111111111111111111202 /* DungeonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DungeonView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -66,6 +78,9 @@
 				A41111111111111111111104 /* Rocket */,
 				A41111111111111111111105 /* Marathon */,
 				A41111111111111111111106 /* PingPong */,
+				A41111111111111111111107 /* Driving */,
+				B41111111111111111111108 /* Golf */,
+				C411111111111111111111108 /* Dungeon */,
 				A21111111111111111111105 /* Assets.xcassets */,
 			);
 			path = Minigames;
@@ -113,6 +128,33 @@
 				A2111111111111111111110C /* PingPongView.swift */,
 			);
 			path = PingPong;
+			sourceTree = "<group>";
+		};
+		A41111111111111111111107 /* Driving */ = {
+			isa = PBXGroup;
+			children = (
+				A2111111111111111111110D /* DrivingScene.swift */,
+				A2111111111111111111110E /* DrivingView.swift */,
+			);
+			path = Driving;
+			sourceTree = "<group>";
+		};
+		B41111111111111111111108 /* Golf */ = {
+			isa = PBXGroup;
+			children = (
+				B2111111111111111111110F /* GolfScene.swift */,
+				B21111111111111111111110 /* GolfView.swift */,
+			);
+			path = Golf;
+			sourceTree = "<group>";
+		};
+		C411111111111111111111108 /* Dungeon */ = {
+			isa = PBXGroup;
+			children = (
+				C111111111111111111111201 /* DungeonScene.swift */,
+				C111111111111111111111202 /* DungeonView.swift */,
+			);
+			path = Dungeon;
 			sourceTree = "<group>";
 		};
 		A41111111111111111111199 /* Products */ = {
@@ -203,6 +245,12 @@
 				A1111111111111111111110A /* MarathonView.swift in Sources */,
 				A1111111111111111111110B /* PingPongScene.swift in Sources */,
 				A1111111111111111111110C /* PingPongView.swift in Sources */,
+				A1111111111111111111110D /* DrivingScene.swift in Sources */,
+				A1111111111111111111110E /* DrivingView.swift in Sources */,
+				B1111111111111111111110F /* GolfScene.swift in Sources */,
+				B11111111111111111111110 /* GolfView.swift in Sources */,
+				C111111111111111111111101 /* DungeonScene.swift in Sources */,
+				C111111111111111111111102 /* DungeonView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
